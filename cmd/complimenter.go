@@ -14,7 +14,7 @@ type compliment struct {
 	body string
 }
 
-func randomRead() string {
+func fetchCompliments() []string {
 	db, err := sql.Open("mysql", "/test")
 	checkErr(err)
 	defer db.Close()
@@ -34,13 +34,18 @@ func randomRead() string {
 		checkErr(err)
 		compliments = append(compliments, body)
 	}
+	return compliments
+}
 
+func randomIntLessThan(n int) int {
 	rand.Seed(time.Now().UnixNano())
-	return compliments[rand.Intn(len(compliments))]
+	return rand.Intn(n)
 }
 
 func main() {
-	fmt.Println(randomRead())
+	compliments := fetchCompliments()
+	index := randomIntLessThan(len(compliments))
+	fmt.Println(compliments[index])
 }
 
 func checkErr(err error) {
