@@ -14,7 +14,30 @@ type compliment struct {
 	body string
 }
 
-func fetchCompliments() []string {
+func fetchMaxId(db *sql.DB) int {
+  var maxId int
+  row := db.QueryRow("SELECT MAX(id) FROM compliments")
+  err := row.Scan(&maxId)
+  checkErr(err)
+
+	return maxId
+}
+
+func fetchCompliment(db *sql.DB, id int) compliment {
+	var body string
+  row := db.QueryRow("SELECT body FROM compliments WHERE id=?", id)
+  err := row.Scan(&body)
+  checkErr(err)
+
+  return compliment{body}
+}
+
+func randomId(n int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(n) + 1
+}
+
+func main() {
 	db, err := sql.Open("mysql", "/test")
 	checkErr(err)
 	defer db.Close()
@@ -22,30 +45,11 @@ func fetchCompliments() []string {
 	err = db.Ping()
 	checkErr(err)
 
-	rows, err := db.Query("SELECT * FROM compliments")
-	checkErr(err)
+	maxId := fetchMaxId(db)
+	chosen_id := randomId(maxId)
+	compliment := fetchCompliment(db, chosen_id)
 
-	var compliments []string
-
-	for rows.Next() {
-		var body string
-		var id int
-		err = rows.Scan(&id, &body)
-		checkErr(err)
-		compliments = append(compliments, body)
-	}
-	return compliments
-}
-
-func randomIntLessThan(n int) int {
-	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(n)
-}
-
-func main() {
-	compliments := fetchCompliments()
-	index := randomIntLessThan(len(compliments))
-	fmt.Println(compliments[index])
+	fmt.Println(compliment)
 }
 
 func checkErr(err error) {
