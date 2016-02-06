@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/billbell73/complimenter/Godeps/_workspace/src/github.com/go-sql-driver/mysql"
 )
 
 type compliment struct {
