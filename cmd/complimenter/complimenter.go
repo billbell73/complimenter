@@ -75,7 +75,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 func makeDbHandler(fn func(http.ResponseWriter, *http.Request, *sql.DB)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		db, err := sql.Open("mysql", os.Getenv("DATABASE_URL"))
+		db, err := sql.Open("mysql", os.Getenv("CLEARDB_DATABASE_URL"))
 		checkErr(err)
 		defer db.Close()
 
