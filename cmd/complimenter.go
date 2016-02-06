@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"net/http"
 	"time"
+	"os"
+	"log"
 
 	_ "github.com/billbell73/complimenter/Godeps/_workspace/src/github.com/go-sql-driver/mysql"
 )
@@ -70,7 +72,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 func makeDbHandler(fn func(http.ResponseWriter, *http.Request, *sql.DB)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		db, err := sql.Open("mysql", "/test")
+		db, err := sql.Open("mysql", os.Getenv("DATABASE_URL"))
 		checkErr(err)
 		defer db.Close()
 
@@ -85,7 +87,13 @@ func main() {
 	http.HandleFunc("/new", newHandler)
 	http.HandleFunc("/show", makeDbHandler(showHandler))
 	http.HandleFunc("/save", makeDbHandler(saveHandler))
-	http.ListenAndServe(":8080", nil)
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	http.ListenAndServe(":"+port, nil)
 }
 
 func checkErr(err error) {
