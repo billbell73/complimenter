@@ -49,7 +49,8 @@ func showHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("../views/index.html")
+	t, err := template.ParseFiles("views/index.html")
+	checkErr(err)
 	t.Execute(w, nil)
 }
 
@@ -82,11 +83,22 @@ func makeDbHandler(fn func(http.ResponseWriter, *http.Request, *sql.DB)) http.Ha
 	}
 }
 
+func serveSingle(pattern string, filename string) {
+    http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+        http.ServeFile(w, r, filename)
+    })
+}
+
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/new", newHandler)
 	http.HandleFunc("/show", makeDbHandler(showHandler))
 	http.HandleFunc("/save", makeDbHandler(saveHandler))
+
+	serveSingle("/sitemap.xml", "./sitemap.xml")
+    serveSingle("/favicon.ico", "./favicon.ico")
+    serveSingle("/robots.txt", "./robots.txt")
+
 
 	port := os.Getenv("PORT")
 	if port == "" {
