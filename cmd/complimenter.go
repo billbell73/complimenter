@@ -1,9 +1,9 @@
 package main
 
 import (
+	"html/template"
 	"database/sql"
-	"fmt"
-	// "net/http"
+	"net/http"
 	"math/rand"
 	"time"
 
@@ -11,7 +11,7 @@ import (
 )
 
 type compliment struct {
-	body string
+	Body string
 }
 
 func fetchMaxId(db *sql.DB) int {
@@ -37,19 +37,30 @@ func randomId(n int) int {
 	return rand.Intn(n) + 1
 }
 
-func main() {
+func showHandler(w http.ResponseWriter, r *http.Request) {
 	db, err := sql.Open("mysql", "/test")
 	checkErr(err)
 	defer db.Close()
 
 	err = db.Ping()
 	checkErr(err)
-
 	maxId := fetchMaxId(db)
 	chosen_id := randomId(maxId)
 	compliment := fetchCompliment(db, chosen_id)
 
-	fmt.Println(compliment)
+	t, _ := template.ParseFiles("../views/show.html")
+  t.Execute(w, compliment)
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	t, _ := template.ParseFiles("../views/index.html")
+  t.Execute(w, nil)
+}
+
+func main() {
+	http.HandleFunc("/", indexHandler)
+	http.HandleFunc("/show", showHandler)
+	http.ListenAndServe(":8080", nil)
 }
 
 func checkErr(err error) {
