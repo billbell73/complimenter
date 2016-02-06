@@ -44,7 +44,8 @@ func showHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	chosen_id := randomId(maxId)
 	compliment := fetchCompliment(db, chosen_id)
 
-	t, _ := template.ParseFiles("../views/show.html")
+	t, err := template.ParseFiles("views/show.html")
+	checkErr(err)
 	t.Execute(w, compliment)
 }
 
@@ -55,7 +56,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func newHandler(w http.ResponseWriter, r *http.Request) {
-	t, _ := template.ParseFiles("../views/new.html")
+	t, err := template.ParseFiles("views/new.html")
+	checkErr(err)
 	t.Execute(w, nil)
 }
 
