@@ -3,13 +3,13 @@ package main
 import (
 	"database/sql"
 	"html/template"
+	"log"
 	"math/rand"
 	"net/http"
-	"time"
 	"os"
-	"log"
+	"time"
 
-	_ "github.com/billbell73/complimenter/Godeps/_workspace/src/github.com/go-sql-driver/mysql"
+	_ "github.com/billbell73/complimenter/Godeps/_workspace/src/github.com/lib/pq"
 )
 
 type compliment struct {
@@ -27,7 +27,7 @@ func fetchMaxId(db *sql.DB) int {
 
 func fetchCompliment(db *sql.DB, id int) compliment {
 	var body string
-	row := db.QueryRow("SELECT body FROM compliments WHERE id=?", id)
+	row := db.QueryRow("SELECT body FROM compliments WHERE id=$1", id)
 	err := row.Scan(&body)
 	checkErr(err)
 
@@ -64,7 +64,7 @@ func newHandler(w http.ResponseWriter, r *http.Request) {
 func saveHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	body := r.FormValue("body")
 
-	stmt, err := db.Prepare("INSERT INTO compliments(body) VALUES(?)")
+	stmt, err := db.Prepare("INSERT INTO compliments(body) VALUES($1)")
 	checkErr(err)
 
 	_, err = stmt.Exec(body)
@@ -75,7 +75,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 func makeDbHandler(fn func(http.ResponseWriter, *http.Request, *sql.DB)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		db, err := sql.Open("mysql", os.Getenv("CLEARDB_DATABASE_URL"))
+		db, err := sql.Open("postgres", os.Getenv("DATABASE_URL"))
 		checkErr(err)
 		defer db.Close()
 
@@ -86,9 +86,9 @@ func makeDbHandler(fn func(http.ResponseWriter, *http.Request, *sql.DB)) http.Ha
 }
 
 func serveSingle(pattern string, filename string) {
-    http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-        http.ServeFile(w, r, filename)
-    })
+	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, filename)
+	})
 }
 
 func main() {
@@ -98,9 +98,8 @@ func main() {
 	http.HandleFunc("/save", makeDbHandler(saveHandler))
 
 	serveSingle("/sitemap.xml", "./sitemap.xml")
-    serveSingle("/favicon.ico", "./favicon.ico")
-    serveSingle("/robots.txt", "./robots.txt")
-
+	serveSingle("/favicon.ico", "./favicon.ico")
+	serveSingle("/robots.txt", "./robots.txt")
 
 	port := os.Getenv("PORT")
 	if port == "" {
