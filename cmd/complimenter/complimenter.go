@@ -85,21 +85,15 @@ func makeDbHandler(fn func(http.ResponseWriter, *http.Request, *sql.DB)) http.Ha
 	}
 }
 
-func serveSingle(pattern string, filename string) {
-	http.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, filename)
-	})
-}
-
 func main() {
 	http.HandleFunc("/", indexHandler)
 	http.HandleFunc("/new", newHandler)
 	http.HandleFunc("/show", makeDbHandler(showHandler))
 	http.HandleFunc("/save", makeDbHandler(saveHandler))
 
-	serveSingle("/sitemap.xml", "./sitemap.xml")
-	serveSingle("/favicon.ico", "./favicon.ico")
-	serveSingle("/robots.txt", "./robots.txt")
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./favicon.ico")
+	})
 
 	port := os.Getenv("PORT")
 	if port == "" {
